@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── THEMES ─────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg: #111210;
+  --surface: #1C1D1A;
+  --surface2: #242520;
+  --border: #2E302B;
+  --text: #E8E6E0;
+  --text-muted: #6B6D66;
+  --accent: #7CB85A;
+  --accent-dim: #4A7A32;
+  --accent-light: #1E2B16;
+  --danger: #D96060;
+  --danger-light: #2A1515;
+  --warn: #C49A3C;
+  --warn-light: #261F0D;
+  --pill-done-bg: #2D4A1E;
+  --pill-done-text: #7CB85A;
+  --hover-border: #3E4039;
+  --google-bg: #222320;
+  --google-border: #3A3C37;
+  --google-hover: #2A2B28;
+  --shadow: rgba(0,0,0,0.4);
+}
+[data-theme="light"] {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE8;
+  --border: #E8E4DC;
+  --text: #1A1814;
+  --text-muted: #8C8880;
+  --accent: #2D5016;
+  --accent-dim: #3D6B20;
+  --accent-light: #EEF3E8;
+  --danger: #8B2020;
+  --danger-light: #F5EDED;
+  --warn: #7A5C1E;
+  --warn-light: #FBF4E8;
+  --pill-done-bg: #D4E8C2;
+  --pill-done-text: #2D5016;
+  --hover-border: #D0CCC4;
+  --google-bg: #FFFFFF;
+  --google-border: #E0DDD8;
+  --google-hover: #F5F3EE;
+  --shadow: rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.25s, color 0.25s;
+}
+
+/* ── LOGIN SCREEN ──────────────────────────────────── */
+#login-screen {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 44px 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.login-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  color: var(--accent);
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+.login-logo em { font-style: italic; color: var(--text-muted); font-size: 26px; }
+
+.login-tagline {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 300;
+  margin-bottom: 32px;
+}
+
+.login-tabs {
+  display: flex;
+  background: var(--surface2);
+  border-radius: 9px;
+  padding: 3px;
+  margin-bottom: 24px;
+  gap: 3px;
+}
+.login-tab {
+  flex: 1;
+  padding: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.login-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px var(--shadow);
+}
+
+.login-info {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1.65;
+  margin-bottom: 22px;
+  padding: 12px 14px;
+  background: var(--accent-light);
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--google-bg);
+  border: 1px solid var(--google-border);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.google-btn:hover { background: var(--google-hover); border-color: var(--hover-border); }
+
+.google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+.login-footnote {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 16px;
+  line-height: 1.55;
+  opacity: 0.7;
+}
+
+/* ── APP SHELL ─────────────────────────────────────── */
+#app-shell { display: none; flex-direction: column; flex: 1; }
+#app-shell.visible { display: flex; }
+
+/* HEADER */
+header {
+  padding: 22px 32px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  letter-spacing: -0.3px;
+  color: var(--accent);
+}
+.brand em { font-style: italic; color: var(--text-muted); font-size: 16px; }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+/* Theme toggle */
+.theme-toggle {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+
+/* User pill */
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px 4px 4px;
+  cursor: pointer;
+  position: relative;
+}
+.user-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.user-avatar-fallback {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.user-name { font-size: 12px; font-weight: 500; color: var(--text); }
+
+.user-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px); right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  min-width: 170px;
+  z-index: 200;
+  box-shadow: 0 8px 28px var(--shadow);
+}
+.user-menu.open { display: block; }
+.user-menu-email {
+  padding: 8px 12px 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+.user-menu-item {
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.user-menu-item:hover { background: var(--surface2); }
+.user-menu-item.danger { color: var(--danger); }
+
+/* NAV */
+nav {
+  display: flex;
+  gap: 2px;
+  padding: 18px 32px 0;
+  border-bottom: 1px solid var(--border);
+}
+.nav-btn {
+  background: none; border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-muted);
+  padding: 10px 16px 12px;
+  cursor: pointer;
+  position: relative;
+  letter-spacing: 0.2px;
+  transition: color 0.2s;
+}
+.nav-btn::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transition: transform 0.2s;
+}
+.nav-btn.active { color: var(--text); }
+.nav-btn.active::after { transform: scaleX(1); }
+.nav-btn:hover { color: var(--text); }
+
+/* MAIN */
+main { flex: 1; padding: 32px; max-width: 680px; width: 100%; margin: 0 auto; }
+
+.page { display: none; animation: fadeIn 0.25s ease; }
+.page.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+
+.section-label {
+  font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--text-muted); margin-bottom: 12px;
+}
+
+/* ── PAGE 1 — TODAY ────────────────────────────────── */
+.day-header { margin-bottom: 22px; }
+.day-header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px; letter-spacing: -0.5px; line-height: 1.1;
+  margin-bottom: 4px;
+}
+.day-header p { font-size: 13px; color: var(--text-muted); font-weight: 300; }
+
+.progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--text-muted);
+  margin-bottom: 6px; font-weight: 300;
+}
+.progress-bar-wrap {
+  background: var(--border); border-radius: 99px;
+  height: 3px; margin-bottom: 28px; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; background: var(--accent);
+  border-radius: 99px; transition: width 0.4s ease;
+}
+
+.time-group { margin-bottom: 24px; }
+.time-group-label {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.time-group-label span {
+  font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-muted); white-space: nowrap;
+}
+.time-group-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.med-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 8px; transition: border-color 0.2s;
+}
+.med-card:hover { border-color: var(--hover-border); }
+
+.check-btn {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--border); background: none;
+  cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; font-size: 11px; color: transparent;
+}
+.check-btn.checked {
+  background: var(--pill-done-bg); border-color: var(--pill-done-bg);
+  color: var(--pill-done-text);
+}
+.check-btn:hover { border-color: var(--accent); }
+
+.med-info { flex: 1; }
+.med-name { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+.med-name.done { text-decoration: line-through; color: var(--text-muted); }
+.med-meta { font-size: 12px; color: var(--text-muted); font-weight: 300; }
+
+.empty-state { text-align: center; padding: 48px 0; color: var(--text-muted); }
+.empty-state .icon { font-size: 28px; margin-bottom: 10px; }
+.empty-state p { font-size: 14px; font-weight: 300; }
+
+/* ── PAGE 2 — SCHEDULE ─────────────────────────────── */
+.form-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; margin-bottom: 28px;
+}
+.form-card h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px; margin-bottom: 20px;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid .full { grid-column: 1 / -1; }
+
+label {
+  display: block; font-size: 11px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--text-muted); margin-bottom: 6px;
+}
+input, select, textarea {
+  width: 100%; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; color: var(--text);
+  outline: none; transition: border-color 0.2s; appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 72px; }
+
+/* Time of day selector */
+.tod-chips { display: flex; gap: 8px; }
+.tod-chip {
+  flex: 1; padding: 12px 8px;
+  border-radius: 10px; border: 1px solid var(--border);
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; background: var(--bg);
+  color: var(--text-muted);
+  transition: all 0.15s; user-select: none;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.tod-chip .chip-icon { font-size: 20px; }
+.tod-chip.selected {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Day chips */
+.days-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+.day-chip {
+  padding: 6px 11px; border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer; background: var(--bg);
+  color: var(--text-muted); transition: all 0.15s; user-select: none;
+}
+.day-chip.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+.day-chip.special { border-style: dashed; }
+.day-chip.special.selected { background: var(--accent-dim); border-style: solid; color: #fff; }
+
+.btn-row { display: flex; justify-content: flex-end; margin-top: 20px; }
+.btn-primary {
+  background: var(--accent); color: #fff; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  padding: 10px 22px; border-radius: 8px;
+  cursor: pointer; letter-spacing: 0.2px; transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+.schedule-list-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+}
+.sli-info { flex: 1; }
+.sli-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.sli-meta { font-size: 12px; color: var(--text-muted); }
+.sli-days { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+.mini-chip {
+  font-size: 10px; padding: 2px 7px; border-radius: 10px;
+  background: var(--accent-light); color: var(--accent); font-weight: 500;
+}
+.btn-delete {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 15px;
+  padding: 4px 6px; border-radius: 6px; transition: all 0.15s; line-height: 1;
+}
+.btn-delete:hover { background: var(--danger-light); color: var(--danger); }
+
+/* ── PAGE 3 — MEDICATIONS ──────────────────────────── */
+.med-list-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px; margin-bottom: 10px;
+  display: flex; gap: 16px;
+}
+.med-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); margin-top: 6px; flex-shrink: 0;
+}
+.med-list-info { flex: 1; }
+.med-list-name { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+.med-list-meta { font-size: 12px; color: var(--text-muted); font-weight: 300; line-height: 1.6; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.tag { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; background: var(--warn-light); color: var(--warn); }
+.tag.green { background: var(--accent-light); color: var(--accent); }
+
+@media (max-width: 500px) {
+  header, nav { padding-left: 18px; padding-right: 18px; }
+  main { padding: 24px 18px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .full { grid-column: 1; }
+  .user-name { display: none; }
+  .login-card { padding: 32px 24px 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Med<em>Track</em></div>
+    <div class="login-tagline">Your personal medication companion</div>
+
+    <div class="login-tabs">
+      <button class="login-tab active" id="tab-signin" onclick="switchLoginTab('signin')">Sign In</button>
+      <button class="login-tab" id="tab-signup" onclick="switchLoginTab('signup')">Sign Up</button>
+    </div>
+
+    <div class="login-info" id="login-info-text">
+      Sign in with your Google account to access your personal medication schedule.
+    </div>
+
+    <button class="google-btn" onclick="triggerGoogleLogin()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      <span id="google-btn-text">Continue with Google</span>
+    </button>
+
+    <div class="login-footnote" id="login-footnote-text">
+      All medication data is saved locally in your browser — nothing is shared with Google or any server.
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SHELL ════════════════════════════════════════ -->
+<div id="app-shell">
+
+<header>
+  <div class="brand">Med<em>Track</em></div>
+  <div class="header-right">
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">Light</span>
+    </button>
+    <div class="user-pill" id="user-pill" onclick="toggleUserMenu()">
+      <div class="user-avatar-fallback" id="user-avatar-fallback">?</div>
+      <img class="user-avatar" id="user-avatar-img" src="" alt="" style="display:none">
+      <span class="user-name" id="user-name-label">User</span>
+      <div class="user-menu" id="user-menu">
+        <div class="user-menu-email" id="user-email-item"></div>
+        <div class="user-menu-item danger" onclick="signOut()">Sign out</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="showPage('today',this)">Today</button>
+  <button class="nav-btn" onclick="showPage('schedule',this)">Schedule</button>
+  <button class="nav-btn" onclick="showPage('medications',this)">Medications</button>
+</nav>
+
+<main>
+
+  <!-- PAGE 1: TODAY -->
+  <div class="page active" id="page-today">
+    <div class="day-header">
+      <h1 id="day-heading">Hello.</h1>
+      <p id="day-sub">Here's what you need to take today.</p>
+    </div>
+    <div class="progress-label">
+      <span id="progress-text">0 of 0 taken</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <div id="today-content"></div>
+  </div>
+
+  <!-- PAGE 2: SCHEDULE -->
+  <div class="page" id="page-schedule">
+    <div class="form-card">
+      <h2>Add Medication</h2>
+      <div class="form-grid">
+
+        <div class="full">
+          <label>Medication Name</label>
+          <input type="text" id="f-name" placeholder="e.g. Metformin">
+        </div>
+
+        <div class="full">
+          <label>Time of Day</label>
+          <div class="tod-chips" id="tod-chips">
+            <div class="tod-chip" data-tod="Morning" onclick="selectTod(this)">
+              <span class="chip-icon">🌅</span>Morning
+            </div>
+            <div class="tod-chip" data-tod="Noon" onclick="selectTod(this)">
+              <span class="chip-icon">☀️</span>Noon
+            </div>
+            <div class="tod-chip" data-tod="Night" onclick="selectTod(this)">
+              <span class="chip-icon">🌙</span>Night
+            </div>
+          </div>
+        </div>
+
+        <div class="full">
+          <label>Meal Timing</label>
+          <select id="f-meal">
+            <option value="">— not specified —</option>
+            <option value="Before food">Before food</option>
+            <option value="With food">With food</option>
+            <option value="After food">After food</option>
+            <option value="Bedtime">Bedtime</option>
+            <option value="Any time">Any time</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Days</label>
+          <div class="days-grid" id="days-chips">
+            <div class="day-chip" data-day="Mon" onclick="toggleDay(this)">Mon</div>
+            <div class="day-chip" data-day="Tue" onclick="toggleDay(this)">Tue</div>
+            <div class="day-chip" data-day="Wed" onclick="toggleDay(this)">Wed</div>
+            <div class="day-chip" data-day="Thu" onclick="toggleDay(this)">Thu</div>
+            <div class="day-chip" data-day="Fri" onclick="toggleDay(this)">Fri</div>
+            <div class="day-chip" data-day="Sat" onclick="toggleDay(this)">Sat</div>
+            <div class="day-chip" data-day="Sun" onclick="toggleDay(this)">Sun</div>
+            <div class="day-chip special" id="chip-daily" onclick="selectAllDays(this)">Every day</div>
+            <div class="day-chip special" id="chip-alternate" onclick="selectAlternate(this)">Every other day</div>
+          </div>
+        </div>
+
+        <div class="full">
+          <label>Notes (optional)</label>
+          <textarea id="f-notes" placeholder="e.g. Take with a full glass of water"></textarea>
+        </div>
+
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="addMedication()">Add Medication</button>
+      </div>
+    </div>
+
+    <div class="section-label">Current Schedule</div>
+    <div id="schedule-list"></div>
+  </div>
+
+  <!-- PAGE 3: MEDICATIONS -->
+  <div class="page" id="page-medications">
+    <div class="day-header">
+      <h1>My Medications</h1>
+      <p id="med-count-label">All medications currently tracked.</p>
+    </div>
+    <div id="medications-list"></div>
+  </div>
+
+</main>
+</div><!-- /app-shell -->
+
+<script>
+// ─── Theme ────────────────────────────────────────────────────────────────
+let theme = localStorage.getItem('medtrack_theme') || 'dark';
+applyTheme(theme);
+
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const icon = document.getElementById('theme-icon');
+  const lbl  = document.getElementById('theme-label');
+  if (icon) icon.textContent = t === 'dark' ? '☀️' : '🌙';
+  if (lbl)  lbl.textContent  = t === 'dark' ? 'Light' : 'Dark';
+  localStorage.setItem('medtrack_theme', t);
+  theme = t;
+}
+
+function toggleTheme() { applyTheme(theme === 'dark' ? 'light' : 'dark'); }
+
+// ─── Auth ─────────────────────────────────────────────────────────────────
+let currentUser = null;
+let loginMode = 'signin';
+
+const savedUser = localStorage.getItem('medtrack_user');
+if (savedUser) {
+  try { currentUser = JSON.parse(savedUser); bootApp(); } catch {}
+}
+
+function switchLoginTab(mode) {
+  loginMode = mode;
+  document.getElementById('tab-signin').classList.toggle('active', mode === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
+
+  const info = document.getElementById('login-info-text');
+  const note = document.getElementById('login-footnote-text');
+  const btnText = document.getElementById('google-btn-text');
+
+  if (mode === 'signup') {
+    info.textContent = 'Create your MedTrack account with Google. Your medication data will be saved privately to this browser.';
+    btnText.textContent = 'Sign up with Google';
+    note.textContent = 'First time here? Your data stays on your device — nothing is uploaded anywhere.';
+  } else {
+    info.textContent = 'Sign in with your Google account to access your personal medication schedule.';
+    btnText.textContent = 'Continue with Google';
+    note.textContent = 'All medication data is saved locally in your browser — nothing is shared with Google or any server.';
+  }
+}
+
+function triggerGoogleLogin() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    fallbackDemoLogin();
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+    callback: handleGoogleCredential,
+    ux_mode: 'popup'
+  });
+  google.accounts.id.prompt(notification => {
+    // If One Tap is suppressed, use renderButton flow
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      fallbackDemoLogin();
+    }
+  });
+}
+
+function handleGoogleCredential(response) {
+  const payload = parseJWT(response.credential);
+  if (!payload) { alert('Login failed. Please try again.'); return; }
+  currentUser = { id: payload.sub, name: payload.name, email: payload.email, picture: payload.picture };
+  localStorage.setItem('medtrack_user', JSON.stringify(currentUser));
+  bootApp();
+}
+
+function parseJWT(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+  } catch { return null; }
+}
+
+function fallbackDemoLogin() {
+  // When Google Client ID isn't set up, allow a name-based demo login
+  const note = `⚠️  To enable real Google login, add your Google OAuth Client ID to the code.\n\nFor now, enter your name to continue in demo mode:`;
+  const name = prompt(note);
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  currentUser = {
+    id: 'demo_' + btoa(unescape(encodeURIComponent(trimmed))).replace(/=/g,''),
+    name: trimmed,
+    email: trimmed.toLowerCase().replace(/\s+/g,'') + '@demo.local',
+    picture: null
+  };
+  localStorage.setItem('medtrack_user', JSON.stringify(currentUser));
+  bootApp();
+}
+
+function bootApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-shell').classList.add('visible');
+
+  // Set user UI
+  const first = currentUser.name.split(' ')[0];
+  document.getElementById('user-name-label').textContent = first;
+  document.getElementById('user-email-item').textContent = currentUser.email;
+  document.getElementById('user-avatar-fallback').textContent = currentUser.name[0].toUpperCase();
+
+  if (currentUser.picture) {
+    const img = document.getElementById('user-avatar-img');
+    img.src = currentUser.picture;
+    img.style.display = 'block';
+    document.getElementById('user-avatar-fallback').style.display = 'none';
+  }
+
+  // Load this user's data
+  const uid = currentUser.id;
+  medications = JSON.parse(localStorage.getItem('mt_meds_' + uid) || '[]');
+  checkedToday = JSON.parse(localStorage.getItem('mt_checked_' + uid) || '{}');
+
+  // Reset checks on new day
+  if (localStorage.getItem('mt_date_' + uid) !== todayStr) {
+    checkedToday = {};
+    localStorage.setItem('mt_date_' + uid, todayStr);
+    save();
+  }
+
+  // Set greeting
+  document.getElementById('day-heading').textContent = greeting;
+
+  // Re-apply theme labels now shell is visible
+  applyTheme(theme);
+
+  renderToday();
+}
+
+function signOut() {
+  localStorage.removeItem('medtrack_user');
+  currentUser = null; medications = []; checkedToday = {};
+  document.getElementById('app-shell').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('user-menu').classList.remove('open');
+}
+
+function toggleUserMenu() {
+  document.getElementById('user-menu').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!document.getElementById('user-pill')?.contains(e.target))
+    document.getElementById('user-menu').classList.remove('open');
+});
+
+// ─── State ────────────────────────────────────────────────────────────────
+let medications = [];
+let checkedToday = {};
+
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const today     = new Date();
+const todayDay  = DAY_NAMES[today.getDay()];
+const todayStr  = today.toDateString();
+const hr        = today.getHours();
+const greeting  = hr < 12 ? 'Good morning.' : hr < 17 ? 'Good afternoon.' : 'Good evening.';
+
+const TOD_ORDER = { Morning: 0, Noon: 1, Night: 2 };
+const TOD_ICONS = { Morning: '🌅', Noon: '☀️', Night: '🌙' };
+
+function save() {
+  if (!currentUser) return;
+  const uid = currentUser.id;
+  localStorage.setItem('mt_meds_'    + uid, JSON.stringify(medications));
+  localStorage.setItem('mt_checked_' + uid, JSON.stringify(checkedToday));
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'today')       renderToday();
+  if (id === 'schedule')    renderSchedule();
+  if (id === 'medications') renderMedications();
+}
+
+// ─── TODAY ────────────────────────────────────────────────────────────────
+function isTodayMed(m) {
+  if (m.days === 'alternate') {
+    const start = new Date(parseInt(m.id));
+    const diff  = Math.floor((today - start) / 86400000);
+    return diff % 2 === 0;
+  }
+  return Array.isArray(m.days) && m.days.includes(todayDay);
+}
+
+function renderToday() {
+  const todayMeds = medications.filter(isTodayMed);
+  const content   = document.getElementById('today-content');
+
+  if (todayMeds.length === 0) {
+    content.innerHTML = `<div class="empty-state"><div class="icon">✦</div><p>No medications scheduled for today.</p></div>`;
+    updateProgress(0, 0);
+    return;
+  }
+
+  // Group by tod
+  const groups = {};
+  todayMeds.forEach(m => {
+    const k = m.tod || 'Other';
+    (groups[k] = groups[k] || []).push(m);
+  });
+
+  const sortedKeys = Object.keys(groups).sort((a,b) => (TOD_ORDER[a]??99) - (TOD_ORDER[b]??99));
+
+  let html = '';
+  sortedKeys.forEach(tod => {
+    const icon = TOD_ICONS[tod] || '💊';
+    html += `<div class="time-group"><div class="time-group-label"><span>${icon} ${tod}</span></div>`;
+    groups[tod].forEach(m => {
+      const done = !!checkedToday[m.id];
+      const meta = [m.meal, m.notes].filter(Boolean).join(' · ');
+      html += `
+        <div class="med-card">
+          <button class="check-btn ${done?'checked':''}" onclick="toggleCheck('${m.id}')">${done?'✓':''}</button>
+          <div class="med-info">
+            <div class="med-name ${done?'done':''}">${m.name}</div>
+            ${meta ? `<div class="med-meta">${meta}</div>` : ''}
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+
+  content.innerHTML = html;
+  updateProgress(todayMeds.filter(m => checkedToday[m.id]).length, todayMeds.length);
+}
+
+function updateProgress(checked, total) {
+  const pct = total ? Math.round(checked/total*100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${checked} of ${total} taken`;
+  document.getElementById('progress-pct').textContent  = pct + '%';
+  document.getElementById('day-sub').textContent =
+    total === 0   ? 'No medications scheduled for today.' :
+    pct  === 100  ? 'All done for today. Great job! 🎉' :
+                    "Here's what you need to take today.";
+}
+
+function toggleCheck(id) {
+  checkedToday[id] = !checkedToday[id];
+  save(); renderToday();
+}
+
+// ─── SCHEDULE ─────────────────────────────────────────────────────────────
+let selectedTod = null;
+
+function selectTod(el) {
+  document.querySelectorAll('.tod-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTod = el.dataset.tod;
+}
+
+function toggleDay(el) {
+  document.getElementById('chip-daily').classList.remove('selected');
+  document.getElementById('chip-alternate').classList.remove('selected');
+  el.classList.toggle('selected');
+}
+
+function selectAllDays(el) {
+  const chips = document.querySelectorAll('#days-chips .day-chip[data-day]');
+  const wasOn = el.classList.contains('selected');
+  chips.forEach(c => c.classList.toggle('selected', !wasOn));
+  el.classList.toggle('selected', !wasOn);
+  document.getElementById('chip-alternate').classList.remove('selected');
+}
+
+function selectAlternate(el) {
+  document.querySelectorAll('#days-chips .day-chip[data-day]').forEach(c => c.classList.remove('selected'));
+  document.getElementById('chip-daily').classList.remove('selected');
+  el.classList.toggle('selected');
+}
+
+function addMedication() {
+  const name      = document.getElementById('f-name').value.trim();
+  const meal      = document.getElementById('f-meal').value;
+  const notes     = document.getElementById('f-notes').value.trim();
+  const isAlt     = document.getElementById('chip-alternate').classList.contains('selected');
+  const selDays   = [...document.querySelectorAll('#days-chips .day-chip[data-day].selected')].map(c => c.dataset.day);
+
+  if (!name)        { alert('Please enter a medication name.'); return; }
+  if (!selectedTod) { alert('Please select a time of day.'); return; }
+  if (!isAlt && selDays.length === 0) { alert('Please select at least one day or choose "Every other day".'); return; }
+
+  medications.push({
+    id:   Date.now().toString(),
+    name, tod: selectedTod, meal, notes,
+    days: isAlt ? 'alternate' : selDays
+  });
+  save();
+
+  // Reset form
+  document.getElementById('f-name').value  = '';
+  document.getElementById('f-meal').value  = '';
+  document.getElementById('f-notes').value = '';
+  document.querySelectorAll('.day-chip, .tod-chip').forEach(c => c.classList.remove('selected'));
+  selectedTod = null;
+
+  renderSchedule();
+}
+
+function deleteMedication(id) {
+  if (!confirm('Remove this medication from your schedule?')) return;
+  medications = medications.filter(m => m.id !== id);
+  delete checkedToday[id];
+  save(); renderSchedule();
+}
+
+function renderSchedule() {
+  const el = document.getElementById('schedule-list');
+  if (!medications.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">＋</div><p>No medications added yet.</p></div>`;
+    return;
+  }
+  el.innerHTML = medications.map(m => {
+    const icon = TOD_ICONS[m.tod] || '💊';
+    const daysHtml = m.days === 'alternate'
+      ? `<span class="mini-chip">Every other day</span>`
+      : m.days.map(d => `<span class="mini-chip">${d}</span>`).join('');
+    return `
+      <div class="schedule-list-item">
+        <div class="sli-info">
+          <div class="sli-name">${m.name}</div>
+          <div class="sli-meta">${icon} ${m.tod||'—'}${m.meal ? ' · '+m.meal : ''}</div>
+          <div class="sli-days">${daysHtml}</div>
+        </div>
+        <button class="btn-delete" onclick="deleteMedication('${m.id}')">✕</button>
+      </div>`;
+  }).join('');
+}
+
+// ─── MEDICATIONS ──────────────────────────────────────────────────────────
+function renderMedications() {
+  const el    = document.getElementById('medications-list');
+  const label = document.getElementById('med-count-label');
+
+  if (!medications.length) {
+    label.textContent = 'No medications tracked yet.';
+    el.innerHTML = `<div class="empty-state"><div class="icon">✦</div><p>Add medications via the Schedule tab.</p></div>`;
+    return;
+  }
+
+  label.textContent = `${medications.length} medication${medications.length > 1 ? 's' : ''} currently tracked.`;
+
+  el.innerHTML = medications.map(m => {
+    const icon = TOD_ICONS[m.tod] || '💊';
+    const daysLabel = m.days === 'alternate' ? 'Every other day'
+      : m.days.length === 7 ? 'Every day'
+      : m.days.join(', ');
+    return `
+      <div class="med-list-item">
+        <div class="med-dot"></div>
+        <div class="med-list-info">
+          <div class="med-list-name">${m.name}</div>
+          ${m.notes ? `<div class="med-list-meta">${m.notes}</div>` : ''}
+          <div class="tags">
+            <span class="tag green">${daysLabel}</span>
+            <span class="tag green">${icon} ${m.tod}</span>
+            ${m.meal ? `<span class="tag">${m.meal}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
