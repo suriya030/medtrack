@@ -389,6 +389,8 @@ main { flex: 1; padding: 32px; max-width: 680px; width: 100%; margin: 0 auto; }
 }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-grid .full { grid-column: 1 / -1; }
+.form-grid .half-flex { display: flex; gap: 14px; grid-column: 1 / -1; }
+.form-grid .half-flex > div { flex: 1; }
 
 label {
   display: block; font-size: 11px; font-weight: 500;
@@ -417,7 +419,6 @@ textarea { resize: vertical; min-height: 72px; }
   text-align: center;
   display: flex; flex-direction: column; align-items: center; gap: 5px;
 }
-.tod-chip .chip-icon { font-size: 20px; }
 .tod-chip.selected {
   background: var(--accent-light);
   border-color: var(--accent);
@@ -453,7 +454,7 @@ textarea { resize: vertical; min-height: 72px; }
 }
 .sli-info { flex: 1; }
 .sli-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
-.sli-meta { font-size: 12px; color: var(--text-muted); }
+.sli-meta { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
 .sli-days { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
 .mini-chip {
   font-size: 10px; padding: 2px 7px; border-radius: 10px;
@@ -466,28 +467,12 @@ textarea { resize: vertical; min-height: 72px; }
 }
 .btn-delete:hover { background: var(--danger-light); color: var(--danger); }
 
-/* ── PAGE 3 — MEDICATIONS ──────────────────────────── */
-.med-list-item {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 18px; margin-bottom: 10px;
-  display: flex; gap: 16px;
-}
-.med-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--accent); margin-top: 6px; flex-shrink: 0;
-}
-.med-list-info { flex: 1; }
-.med-list-name { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
-.med-list-meta { font-size: 12px; color: var(--text-muted); font-weight: 300; line-height: 1.6; }
-.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.tag { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; background: var(--warn-light); color: var(--warn); }
-.tag.green { background: var(--accent-light); color: var(--accent); }
-
 @media (max-width: 500px) {
   header, nav { padding-left: 18px; padding-right: 18px; }
   main { padding: 24px 18px; }
   .form-grid { grid-template-columns: 1fr; }
   .form-grid .full { grid-column: 1; }
+  .form-grid .half-flex { flex-direction: column; gap: 14px; }
   .user-name { display: none; }
   .login-card { padding: 32px 24px 28px; }
 }
@@ -551,7 +536,6 @@ textarea { resize: vertical; min-height: 72px; }
 <nav>
   <button class="nav-btn active" onclick="showPage('today',this)">Today</button>
   <button class="nav-btn" onclick="showPage('schedule',this)">Schedule</button>
-  <button class="nav-btn" onclick="showPage('medications',this)">Medications</button>
 </nav>
 
 <main>
@@ -586,27 +570,17 @@ textarea { resize: vertical; min-height: 72px; }
         <div class="full">
           <label>Time of Day</label>
           <div class="tod-chips" id="tod-chips">
-            <div class="tod-chip" data-tod="Morning" onclick="selectTod(this)">
-              <span class="chip-icon">🌅</span>Morning
-            </div>
-            <div class="tod-chip" data-tod="Noon" onclick="selectTod(this)">
-              <span class="chip-icon">☀️</span>Noon
-            </div>
-            <div class="tod-chip" data-tod="Night" onclick="selectTod(this)">
-              <span class="chip-icon">🌙</span>Night
-            </div>
+            <div class="tod-chip" data-tod="Morning" onclick="toggleTod(this)">Morning</div>
+            <div class="tod-chip" data-tod="Noon" onclick="toggleTod(this)">Noon</div>
+            <div class="tod-chip" data-tod="Night" onclick="toggleTod(this)">Night</div>
           </div>
         </div>
 
         <div class="full">
           <label>Meal Timing</label>
           <select id="f-meal">
-            <option value="">— not specified —</option>
+            <option value="After food" selected>After food</option>
             <option value="Before food">Before food</option>
-            <option value="With food">With food</option>
-            <option value="After food">After food</option>
-            <option value="Bedtime">Bedtime</option>
-            <option value="Any time">Any time</option>
           </select>
         </div>
 
@@ -626,6 +600,22 @@ textarea { resize: vertical; min-height: 72px; }
         </div>
 
         <div class="full">
+          <label>Number of Doses</label>
+          <input type="number" id="f-doses" placeholder="e.g. 1" min="1" value="1">
+        </div>
+
+        <div class="half-flex">
+          <div>
+            <label>Start Date</label>
+            <input type="date" id="f-start-date">
+          </div>
+          <div>
+            <label>End Date</label>
+            <input type="date" id="f-end-date">
+          </div>
+        </div>
+
+        <div class="full">
           <label>Notes (optional)</label>
           <textarea id="f-notes" placeholder="e.g. Take with a full glass of water"></textarea>
         </div>
@@ -638,15 +628,6 @@ textarea { resize: vertical; min-height: 72px; }
 
     <div class="section-label">Current Schedule</div>
     <div id="schedule-list"></div>
-  </div>
-
-  <!-- PAGE 3: MEDICATIONS -->
-  <div class="page" id="page-medications">
-    <div class="day-header">
-      <h1>My Medications</h1>
-      <p id="med-count-label">All medications currently tracked.</p>
-    </div>
-    <div id="medications-list"></div>
   </div>
 
 </main>
@@ -709,7 +690,6 @@ function triggerGoogleLogin() {
     ux_mode: 'popup'
   });
   google.accounts.id.prompt(notification => {
-    // If One Tap is suppressed, use renderButton flow
     if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
       fallbackDemoLogin();
     }
@@ -731,7 +711,6 @@ function parseJWT(token) {
 }
 
 function fallbackDemoLogin() {
-  // When Google Client ID isn't set up, allow a name-based demo login
   const note = `⚠️  To enable real Google login, add your Google OAuth Client ID to the code.\n\nFor now, enter your name to continue in demo mode:`;
   const name = prompt(note);
   if (!name || !name.trim()) return;
@@ -750,7 +729,6 @@ function bootApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-shell').classList.add('visible');
 
-  // Set user UI
   const first = currentUser.name.split(' ')[0];
   document.getElementById('user-name-label').textContent = first;
   document.getElementById('user-email-item').textContent = currentUser.email;
@@ -763,24 +741,18 @@ function bootApp() {
     document.getElementById('user-avatar-fallback').style.display = 'none';
   }
 
-  // Load this user's data
   const uid = currentUser.id;
   medications = JSON.parse(localStorage.getItem('mt_meds_' + uid) || '[]');
   checkedToday = JSON.parse(localStorage.getItem('mt_checked_' + uid) || '{}');
 
-  // Reset checks on new day
   if (localStorage.getItem('mt_date_' + uid) !== todayStr) {
     checkedToday = {};
     localStorage.setItem('mt_date_' + uid, todayStr);
     save();
   }
 
-  // Set greeting
   document.getElementById('day-heading').textContent = greeting;
-
-  // Re-apply theme labels now shell is visible
   applyTheme(theme);
-
   renderToday();
 }
 
@@ -812,7 +784,6 @@ const hr        = today.getHours();
 const greeting  = hr < 12 ? 'Good morning.' : hr < 17 ? 'Good afternoon.' : 'Good evening.';
 
 const TOD_ORDER = { Morning: 0, Noon: 1, Night: 2 };
-const TOD_ICONS = { Morning: '🌅', Noon: '☀️', Night: '🌙' };
 
 function save() {
   if (!currentUser) return;
@@ -829,11 +800,21 @@ function showPage(id, btn) {
   btn.classList.add('active');
   if (id === 'today')       renderToday();
   if (id === 'schedule')    renderSchedule();
-  if (id === 'medications') renderMedications();
 }
 
 // ─── TODAY ────────────────────────────────────────────────────────────────
 function isTodayMed(m) {
+  // Check Date Constraints if defined
+  const t = new Date(); t.setHours(0,0,0,0);
+  if (m.startDate) {
+    const s = new Date(m.startDate); s.setHours(0,0,0,0);
+    if (t < s) return false;
+  }
+  if (m.endDate) {
+    const e = new Date(m.endDate); e.setHours(23,59,59,999);
+    if (t > e) return false;
+  }
+
   if (m.days === 'alternate') {
     const start = new Date(parseInt(m.id));
     const diff  = Math.floor((today - start) / 86400000);
@@ -852,25 +833,34 @@ function renderToday() {
     return;
   }
 
-  // Group by tod
+  // Group by Time of Day
   const groups = {};
   todayMeds.forEach(m => {
-    const k = m.tod || 'Other';
-    (groups[k] = groups[k] || []).push(m);
+    const tods = m.tods && m.tods.length ? m.tods : (m.tod ? [m.tod] : ['Other']);
+    tods.forEach(t => {
+      (groups[t] = groups[t] || []).push(m);
+    });
   });
 
   const sortedKeys = Object.keys(groups).sort((a,b) => (TOD_ORDER[a]??99) - (TOD_ORDER[b]??99));
 
   let html = '';
+  let totalChecks = 0;
+  let totalRequired = 0;
+
   sortedKeys.forEach(tod => {
-    const icon = TOD_ICONS[tod] || '💊';
-    html += `<div class="time-group"><div class="time-group-label"><span>${icon} ${tod}</span></div>`;
+    html += `<div class="time-group"><div class="time-group-label"><span>${tod}</span></div>`;
     groups[tod].forEach(m => {
-      const done = !!checkedToday[m.id];
-      const meta = [m.meal, m.notes].filter(Boolean).join(' · ');
+      totalRequired++;
+      const key = m.id + '-' + tod; // Unique key to allow checking morning and night separately
+      const done = !!checkedToday[key];
+      if (done) totalChecks++;
+      const doseStr = m.doses ? `${m.doses} dose(s)` : '';
+      const meta = [m.meal, doseStr, m.notes].filter(Boolean).join(' · ');
+      
       html += `
         <div class="med-card">
-          <button class="check-btn ${done?'checked':''}" onclick="toggleCheck('${m.id}')">${done?'✓':''}</button>
+          <button class="check-btn ${done?'checked':''}" onclick="toggleCheck('${m.id}', '${tod}')">${done?'✓':''}</button>
           <div class="med-info">
             <div class="med-name ${done?'done':''}">${m.name}</div>
             ${meta ? `<div class="med-meta">${meta}</div>` : ''}
@@ -881,7 +871,7 @@ function renderToday() {
   });
 
   content.innerHTML = html;
-  updateProgress(todayMeds.filter(m => checkedToday[m.id]).length, todayMeds.length);
+  updateProgress(totalChecks, totalRequired);
 }
 
 function updateProgress(checked, total) {
@@ -895,18 +885,24 @@ function updateProgress(checked, total) {
                     "Here's what you need to take today.";
 }
 
-function toggleCheck(id) {
-  checkedToday[id] = !checkedToday[id];
+function toggleCheck(id, tod) {
+  const key = id + '-' + tod;
+  checkedToday[key] = !checkedToday[key];
   save(); renderToday();
 }
 
 // ─── SCHEDULE ─────────────────────────────────────────────────────────────
-let selectedTod = null;
+let selectedTods = [];
 
-function selectTod(el) {
-  document.querySelectorAll('.tod-chip').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedTod = el.dataset.tod;
+function toggleTod(el) {
+  const tod = el.dataset.tod;
+  if (selectedTods.includes(tod)) {
+    selectedTods = selectedTods.filter(t => t !== tod);
+    el.classList.remove('selected');
+  } else {
+    selectedTods.push(tod);
+    el.classList.add('selected');
+  }
 }
 
 function toggleDay(el) {
@@ -933,26 +929,32 @@ function addMedication() {
   const name      = document.getElementById('f-name').value.trim();
   const meal      = document.getElementById('f-meal').value;
   const notes     = document.getElementById('f-notes').value.trim();
+  const doses     = document.getElementById('f-doses').value || 1;
+  const startDate = document.getElementById('f-start-date').value;
+  const endDate   = document.getElementById('f-end-date').value;
   const isAlt     = document.getElementById('chip-alternate').classList.contains('selected');
   const selDays   = [...document.querySelectorAll('#days-chips .day-chip[data-day].selected')].map(c => c.dataset.day);
 
-  if (!name)        { alert('Please enter a medication name.'); return; }
-  if (!selectedTod) { alert('Please select a time of day.'); return; }
+  if (!name)                    { alert('Please enter a medication name.'); return; }
+  if (selectedTods.length === 0){ alert('Please select at least one time of day.'); return; }
   if (!isAlt && selDays.length === 0) { alert('Please select at least one day or choose "Every other day".'); return; }
 
   medications.push({
     id:   Date.now().toString(),
-    name, tod: selectedTod, meal, notes,
+    name, tods: [...selectedTods], meal, notes, doses, startDate, endDate,
     days: isAlt ? 'alternate' : selDays
   });
   save();
 
   // Reset form
   document.getElementById('f-name').value  = '';
-  document.getElementById('f-meal').value  = '';
+  document.getElementById('f-meal').value  = 'After food';
   document.getElementById('f-notes').value = '';
+  document.getElementById('f-doses').value = '1';
+  document.getElementById('f-start-date').value = '';
+  document.getElementById('f-end-date').value = '';
   document.querySelectorAll('.day-chip, .tod-chip').forEach(c => c.classList.remove('selected'));
-  selectedTod = null;
+  selectedTods = [];
 
   renderSchedule();
 }
@@ -960,7 +962,10 @@ function addMedication() {
 function deleteMedication(id) {
   if (!confirm('Remove this medication from your schedule?')) return;
   medications = medications.filter(m => m.id !== id);
-  delete checkedToday[id];
+  // Clean up any checks associated with this ID
+  Object.keys(checkedToday).forEach(key => {
+    if(key.startsWith(id + '-')) delete checkedToday[key];
+  });
   save(); renderSchedule();
 }
 
@@ -971,15 +976,24 @@ function renderSchedule() {
     return;
   }
   el.innerHTML = medications.map(m => {
-    const icon = TOD_ICONS[m.tod] || '💊';
     const daysHtml = m.days === 'alternate'
       ? `<span class="mini-chip">Every other day</span>`
       : m.days.map(d => `<span class="mini-chip">${d}</span>`).join('');
+    
+    let metaArr = [];
+    if (m.tods && m.tods.length) metaArr.push(m.tods.join(', '));
+    else if (m.tod) metaArr.push(m.tod); // Fallback for old records
+    
+    if (m.meal) metaArr.push(m.meal);
+    if (m.doses) metaArr.push(`${m.doses} dose(s)`);
+    if (m.startDate) metaArr.push(`Start: ${m.startDate}`);
+    if (m.endDate) metaArr.push(`End: ${m.endDate}`);
+
     return `
       <div class="schedule-list-item">
         <div class="sli-info">
           <div class="sli-name">${m.name}</div>
-          <div class="sli-meta">${icon} ${m.tod||'—'}${m.meal ? ' · '+m.meal : ''}</div>
+          <div class="sli-meta">${metaArr.join(' · ')}</div>
           <div class="sli-days">${daysHtml}</div>
         </div>
         <button class="btn-delete" onclick="deleteMedication('${m.id}')">✕</button>
@@ -987,39 +1001,6 @@ function renderSchedule() {
   }).join('');
 }
 
-// ─── MEDICATIONS ──────────────────────────────────────────────────────────
-function renderMedications() {
-  const el    = document.getElementById('medications-list');
-  const label = document.getElementById('med-count-label');
-
-  if (!medications.length) {
-    label.textContent = 'No medications tracked yet.';
-    el.innerHTML = `<div class="empty-state"><div class="icon">✦</div><p>Add medications via the Schedule tab.</p></div>`;
-    return;
-  }
-
-  label.textContent = `${medications.length} medication${medications.length > 1 ? 's' : ''} currently tracked.`;
-
-  el.innerHTML = medications.map(m => {
-    const icon = TOD_ICONS[m.tod] || '💊';
-    const daysLabel = m.days === 'alternate' ? 'Every other day'
-      : m.days.length === 7 ? 'Every day'
-      : m.days.join(', ');
-    return `
-      <div class="med-list-item">
-        <div class="med-dot"></div>
-        <div class="med-list-info">
-          <div class="med-list-name">${m.name}</div>
-          ${m.notes ? `<div class="med-list-meta">${m.notes}</div>` : ''}
-          <div class="tags">
-            <span class="tag green">${daysLabel}</span>
-            <span class="tag green">${icon} ${m.tod}</span>
-            ${m.meal ? `<span class="tag">${m.meal}</span>` : ''}
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-}
 </script>
 </body>
 </html>
