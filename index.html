@@ -37,11 +37,13 @@
 </script>
 
 <style>
-/* CSS Remains unchanged from previous version */
+/* ── THEMES ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 [data-theme="dark"] { --bg: #111210; --surface: #1C1D1A; --surface2: #242520; --border: #2E302B; --text: #E8E6E0; --text-muted: #6B6D66; --accent: #7CB85A; --accent-dim: #4A7A32; --accent-light: #1E2B16; --danger: #D96060; --danger-light: #2A1515; --warn: #C49A3C; --warn-light: #261F0D; --pill-done-bg: #2D4A1E; --pill-done-text: #7CB85A; --hover-border: #3E4039; --google-bg: #222320; --google-border: #3A3C37; --google-hover: #2A2B28; --shadow: rgba(0,0,0,0.4); }
 [data-theme="light"] { --bg: #F7F5F0; --surface: #FFFFFF; --surface2: #F0EDE8; --border: #E8E4DC; --text: #1A1814; --text-muted: #8C8880; --accent: #2D5016; --accent-dim: #3D6B20; --accent-light: #EEF3E8; --danger: #8B2020; --danger-light: #F5EDED; --warn: #7A5C1E; --warn-light: #FBF4E8; --pill-done-bg: #D4E8C2; --pill-done-text: #2D5016; --hover-border: #D0CCC4; --google-bg: #FFFFFF; --google-border: #E0DDD8; --google-hover: #F5F3EE; --shadow: rgba(0,0,0,0.08); }
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.25s, color 0.25s; }
+
+/* ── LOGIN SCREEN ──────────────────────────────────── */
 #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.3s ease; }
 .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 44px 40px 36px; width: 100%; max-width: 380px; text-align: center; }
 .login-logo { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--accent); margin-bottom: 6px; letter-spacing: -0.5px; }
@@ -51,6 +53,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .google-btn:hover { background: var(--google-hover); border-color: var(--hover-border); }
 .google-icon { width: 18px; height: 18px; flex-shrink: 0; }
 .login-footnote { font-size: 11px; color: var(--text-muted); margin-top: 16px; line-height: 1.55; opacity: 0.7; }
+
+/* ── APP SHELL ─────────────────────────────────────── */
 #app-shell { display: none; flex-direction: column; flex: 1; }
 #app-shell.visible { display: flex; }
 header { padding: 22px 32px 0; display: flex; align-items: center; justify-content: space-between; }
@@ -80,6 +84,8 @@ main { flex: 1; padding: 32px; max-width: 680px; width: 100%; margin: 0 auto; }
 .page.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
 .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); margin-bottom: 12px; }
+
+/* ── PAGES ─────────────────────────────────────────── */
 .day-header { margin-bottom: 22px; }
 .day-header h1 { font-family: 'DM Serif Display', serif; font-size: 30px; letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 4px; }
 .day-header p { font-size: 13px; color: var(--text-muted); font-weight: 300; }
@@ -137,20 +143,20 @@ textarea { resize: vertical; min-height: 72px; }
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">Med<em>Track</em> Cloud</div>
-    <div class="login-tagline">Sync across devices & Calendar</div>
+    <div class="login-tagline">Sync seamlessly across devices</div>
 
     <div class="login-info" id="login-info-text">
-      Sign in with Google to sync your schedule securely to Firebase and automatically add reminders to your Google Calendar.
+      Sign in with Google to sync your medication schedule securely to your private Firebase cloud.
     </div>
 
-    <button class="google-btn" onclick="triggerGoogleOAuth()">
+    <button class="google-btn" onclick="triggerGoogleLogin()">
       <svg class="google-icon" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
       </svg>
-      <span>Connect Google Account</span>
+      <span>Sign in with Google</span>
     </button>
   </div>
 </div>
@@ -242,9 +248,8 @@ textarea { resize: vertical; min-height: 72px; }
 </div>
 
 <script>
-// ─── Constants & Setup ──────────────────────────────────────────────────
-const CLIENT_ID = '882299561279-biao4krttit4n6mgc6gfft8s09m99vir.apps.googleusercontent.com'; // Your Client ID
-const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+// ─── Theme & Setup ────────────────────────────────────────────────────────
+const CLIENT_ID = '882299561279-biao4krttit4n6mgc6gfft8s09m99vir.apps.googleusercontent.com';
 
 let theme = localStorage.getItem('medtrack_theme') || 'dark';
 applyTheme(theme);
@@ -260,11 +265,8 @@ function applyTheme(t) {
 }
 function toggleTheme() { applyTheme(theme === 'dark' ? 'light' : 'dark'); }
 
-// ─── State & Firebase Sync ────────────────────────────────────────────────
+// ─── Authentication & Firebase ────────────────────────────────────────────
 let currentUser = null;
-let accessToken = null;
-let tokenClient = null;
-
 let medications = [];
 let checkedToday = {};
 
@@ -272,37 +274,48 @@ const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const today = new Date();
 const todayStr = today.toDateString();
 
-// Try to load cached user session
+// Check for existing session
 const savedUser = localStorage.getItem('medtrack_user');
 if (savedUser) { try { currentUser = JSON.parse(savedUser); bootApp(); } catch {} }
 
-// Initialize Google Token Client for Calendar Authorization
-window.onload = function () {
-  if (typeof google !== 'undefined') {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: `openid email profile ${CALENDAR_SCOPE}`,
-      callback: (tokenResponse) => {
-        if (tokenResponse && tokenResponse.access_token) {
-          accessToken = tokenResponse.access_token;
-          
-          // Fetch user profile info if it's their first time logging in
-          fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          }).then(res => res.json()).then(profile => {
-             currentUser = { id: profile.sub, name: profile.name, email: profile.email, picture: profile.picture };
-             localStorage.setItem('medtrack_user', JSON.stringify(currentUser));
-             bootApp();
-          });
-        }
-      },
-    });
+function triggerGoogleLogin() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    fallbackDemoLogin();
+    return;
   }
-};
+  google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback: handleGoogleCredential,
+    ux_mode: 'popup'
+  });
+  google.accounts.id.prompt(notification => {
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      fallbackDemoLogin();
+    }
+  });
+}
 
-function triggerGoogleOAuth() {
-  if (tokenClient) { tokenClient.requestAccessToken(); } 
-  else { alert('Google Auth failed to load. Check your connection.'); }
+function handleGoogleCredential(response) {
+  const payload = parseJWT(response.credential);
+  if (!payload) { alert('Login failed. Please try again.'); return; }
+  currentUser = { id: payload.sub, name: payload.name, email: payload.email, picture: payload.picture };
+  localStorage.setItem('medtrack_user', JSON.stringify(currentUser));
+  bootApp();
+}
+
+function parseJWT(token) {
+  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } 
+  catch { return null; }
+}
+
+function fallbackDemoLogin() {
+  const note = `⚠️ Google identity library not loaded or blocked.\n\nEnter your name to continue in demo mode:`;
+  const name = prompt(note);
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  currentUser = { id: 'demo_' + btoa(unescape(encodeURIComponent(trimmed))).replace(/=/g,''), name: trimmed, email: trimmed.toLowerCase().replace(/\s+/g,'') + '@demo.local', picture: null };
+  localStorage.setItem('medtrack_user', JSON.stringify(currentUser));
+  bootApp();
 }
 
 function bootApp() {
@@ -333,10 +346,15 @@ function bootApp() {
         }
         renderToday();
         renderSchedule();
+      } else {
+         // Create initial document if it doesn't exist
+         saveDataToFirebase();
+         renderToday();
+         renderSchedule();
       }
     });
   } else {
-    // Fallback to local storage if Firebase isn't configured
+    // Fallback to local storage if Firebase fails to load
     medications = JSON.parse(localStorage.getItem('mt_meds_' + currentUser.id) || '[]');
     checkedToday = JSON.parse(localStorage.getItem('mt_checked_' + currentUser.id) || '{}');
     if (localStorage.getItem('mt_date_' + currentUser.id) !== todayStr) {
@@ -361,10 +379,11 @@ function saveDataToFirebase() {
 
 function signOut() {
   localStorage.removeItem('medtrack_user');
-  currentUser = null; accessToken = null; medications = []; checkedToday = {};
+  currentUser = null; medications = []; checkedToday = {};
   document.getElementById('app-shell').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
 }
+
 function toggleUserMenu() { document.getElementById('user-menu').classList.toggle('open'); }
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -374,8 +393,9 @@ function showPage(id, btn) {
   if (id === 'today') renderToday(); if (id === 'schedule') renderSchedule();
 }
 
-// ─── Logic ────────────────────────────────────────────────────────────────
+// ─── Application Logic ────────────────────────────────────────────────────
 let selectedTods = [];
+
 function toggleTod(el) {
   const tod = el.dataset.tod;
   if (selectedTods.includes(tod)) { selectedTods = selectedTods.filter(t => t !== tod); el.classList.remove('selected'); }
@@ -393,62 +413,6 @@ function selectAlternate(el) {
   document.getElementById('chip-daily').classList.remove('selected'); el.classList.toggle('selected');
 }
 
-// Get correct hour based on rules
-function getScheduledHour(tod, mealType) {
-  let hour = 9; // Default Morning
-  if (tod === 'Noon') hour = 13;
-  if (tod === 'Night') hour = 21;
-  if (mealType === 'After food') hour += 1;
-  return hour;
-}
-
-// Create an Event in Google Calendar
-async function createCalendarEvent(medName, tod, mealType, startDate, endDateStr, daysType, specificDays) {
-  if (!accessToken) return;
-
-  const hour = getScheduledHour(tod, mealType);
-  const startDateTime = new Date(startDate);
-  startDateTime.setHours(hour, 0, 0, 0);
-  
-  const endDateTime = new Date(startDateTime);
-  endDateTime.setMinutes(15); // Assume 15 min duration for the calendar block
-
-  // Construct standard iCal RRULE
-  let rrule = '';
-  const endFormatted = endDateStr.replace(/-/g, '') + 'T235959Z'; // Until date
-
-  if (daysType === 'alternate') {
-    rrule = `RRULE:FREQ=DAILY;INTERVAL=2;UNTIL=${endFormatted}`;
-  } else if (specificDays.length === 7) {
-    rrule = `RRULE:FREQ=DAILY;UNTIL=${endFormatted}`;
-  } else {
-    // Map 'Mon' -> 'MO'
-    const dayMap = { 'Sun':'SU','Mon':'MO','Tue':'TU','Wed':'WE','Thu':'TH','Fri':'FR','Sat':'SA' };
-    const rruleDays = specificDays.map(d => dayMap[d]).join(',');
-    rrule = `RRULE:FREQ=WEEKLY;BYDAY=${rruleDays};UNTIL=${endFormatted}`;
-  }
-
-  const event = {
-    summary: `Take Medication: ${medName}`,
-    description: `Time to take your ${medName}. (${mealType})`,
-    start: { dateTime: startDateTime.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
-    end: { dateTime: endDateTime.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
-    recurrence: [rrule],
-    reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 10 }] }
-  };
-
-  try {
-    await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(event)
-    });
-    console.log(`Calendar event created for ${medName} - ${tod}`);
-  } catch (err) {
-    console.error("Error creating calendar event", err);
-  }
-}
-
 function addMedication() {
   const name = document.getElementById('f-name').value.trim();
   const meal = document.getElementById('f-meal').value;
@@ -461,7 +425,7 @@ function addMedication() {
   if (selectedTods.length === 0){ alert('Please select at least one time of day.'); return; }
   if (!isAlt && selDays.length === 0) { alert('Please select at least one day or choose "Every other day".'); return; }
 
-  // Date Calculation
+  // Automatic Date Calculation
   let sDate = null; let eDate = null; let remainingDoses = doses;
   let currDate = new Date(); currDate.setHours(0,0,0,0);
   const dosesPerDay = selectedTods.length;
@@ -492,14 +456,6 @@ function addMedication() {
   medications.push(newMed);
   saveDataToFirebase();
 
-  // Create Calendar Events automatically (one recurring event per Time of Day selected)
-  if (accessToken) {
-    selectedTods.forEach(tod => {
-      createCalendarEvent(name, tod, meal, sDate, endDateStr, isAlt ? 'alternate' : 'specific', selDays);
-    });
-    alert('Medication added and synced to Google Calendar!');
-  }
-
   // Reset form
   document.getElementById('f-name').value = ''; document.getElementById('f-meal').value = 'After food';
   document.getElementById('f-notes').value = ''; document.getElementById('f-doses').value = '1';
@@ -507,7 +463,6 @@ function addMedication() {
   selectedTods = []; renderSchedule();
 }
 
-// ─── Rendering (Today & Schedule) ─────────────────────────────────────────
 function isTodayMed(m) {
   const t = new Date(); t.setHours(0,0,0,0);
   if (m.startDate && t < new Date(m.startDate + 'T00:00:00')) return false;
@@ -557,7 +512,7 @@ function toggleCheck(key) {
 }
 
 function deleteMedication(id) {
-  if (!confirm('Remove this medication from your schedule? (Note: This will not delete previously created calendar events)')) return;
+  if (!confirm('Remove this medication from your schedule?')) return;
   medications = medications.filter(m => m.id !== id);
   Object.keys(checkedToday).forEach(key => { if(key.startsWith(id + '-')) delete checkedToday[key]; });
   saveDataToFirebase(); renderSchedule();
