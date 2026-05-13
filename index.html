@@ -57,10 +57,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .login-logo { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--accent); margin-bottom: 6px; letter-spacing: -0.5px; }
 .login-logo em { font-style: italic; color: var(--text-muted); font-size: 26px; }
 .login-tagline { font-size: 13px; color: var(--text-muted); font-weight: 300; margin-bottom: 32px; }
-.login-tabs { display: flex; background: var(--surface2); border-radius: 9px; padding: 3px; margin-bottom: 24px; gap: 3px; }
-.login-tab { flex: 1; padding: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; border: none; background: none; color: var(--text-muted); border-radius: 7px; cursor: pointer; transition: all 0.2s; }
-.login-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px var(--shadow); }
 .login-info { font-size: 12.5px; color: var(--text-muted); font-weight: 300; line-height: 1.65; margin-bottom: 22px; padding: 12px 14px; background: var(--accent-light); border-radius: 9px; border: 1px solid var(--border); text-align: left; }
+.form-subsection { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border); }
+.form-subsection:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+.hidden { display: none !important; }
 .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 13px 20px; background: var(--google-bg); border: 1px solid var(--google-border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; transition: background 0.15s, border-color 0.15s; }
 .google-btn:hover { background: var(--google-hover); border-color: var(--hover-border); }
 .google-btn:disabled { opacity: 0.5; cursor: default; }
@@ -150,7 +150,7 @@ label { display: block; font-size: 11px; font-weight: 500; text-transform: upper
 input, select, textarea { width: 100%; font-family: 'DM Sans', sans-serif; font-size: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); outline: none; transition: border-color 0.2s; appearance: none; }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); }
 textarea { resize: vertical; min-height: 72px; }
-.chip-row { display: flex; gap: 8px; }
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .sel-chip { flex: 1; padding: 10px 8px; border-radius: 10px; border: 1px solid var(--border); font-size: 13px; font-weight: 500; cursor: pointer; background: var(--bg); color: var(--text-muted); transition: all 0.15s; user-select: none; text-align: center; }
 .sel-chip.selected { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
 .days-grid { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -204,10 +204,6 @@ textarea { resize: vertical; min-height: 72px; }
   <div class="login-card">
     <div class="login-logo">Med<em>Track</em></div>
     <div class="login-tagline">Your personal medication companion</div>
-    <div class="login-tabs">
-      <button class="login-tab active" id="tab-signin" onclick="switchLoginTab('signin')">Sign In</button>
-      <button class="login-tab" id="tab-signup" onclick="switchLoginTab('signup')">Sign Up</button>
-    </div>
     <div class="login-info" id="login-info-text">Sign in with your Google account to access your personal medication schedule.</div>
     <button class="google-btn" id="google-login-btn" onclick="triggerGoogleLogin()">
       <svg class="google-icon" viewBox="0 0 24 24">
@@ -304,8 +300,70 @@ textarea { resize: vertical; min-height: 72px; }
           </div>
         </div>
         <div class="full">
-          <label>Number of Doses <span class="label-hint">(total supply count)</span></label>
-          <input type="number" id="f-doses" min="1" placeholder="e.g. 30">
+          <label>How long will you take this?</label>
+          <div class="chip-row" id="course-type-chips" style="margin-bottom:12px">
+            <div class="sel-chip selected" data-course="doses" onclick="selectCourseType(this)">By total doses</div>
+            <div class="sel-chip" data-course="duration" onclick="selectCourseType(this)">By weeks or months</div>
+            <div class="sel-chip" data-course="ongoing" onclick="selectCourseType(this)">Ongoing</div>
+          </div>
+          <div id="wrap-course-doses">
+            <label>Number of Doses <span class="label-hint">(total supply count)</span></label>
+            <input type="number" id="f-doses" min="1" placeholder="e.g. 30">
+          </div>
+          <div id="wrap-course-duration" class="hidden">
+            <label>Course length</label>
+            <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-top:6px">
+              <div>
+                <label class="label-hint" style="display:block;margin-bottom:6px">Unit</label>
+                <select id="f-duration-unit">
+                  <option value="weeks">Weeks</option>
+                  <option value="months">Months</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-hint" style="display:block;margin-bottom:6px">How many</label>
+                <select id="f-duration-count"></select>
+              </div>
+            </div>
+          </div>
+          <div id="wrap-course-ongoing" class="hidden form-subsection">
+            <label>Do you need breaks between treatment periods? <span class="label-hint">(uncommon — e.g. some steroids or chemo cycles)</span></label>
+            <div class="chip-row" id="break-yn-chips" style="margin-top:8px">
+              <div class="sel-chip selected" data-breakyn="no" onclick="selectBreakYn(this)">No</div>
+              <div class="sel-chip" data-breakyn="yes" onclick="selectBreakYn(this)">Yes</div>
+            </div>
+            <div id="wrap-break-cycle" class="hidden form-subsection">
+              <p style="font-size:12px;color:var(--text-muted);font-weight:300;margin-bottom:12px;line-height:1.5">Choose how long each break lasts, then roughly how long you take the medication before each break (both are needed to hide doses during time off).</p>
+              <label style="margin-bottom:8px">Break (off medication)</label>
+              <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-bottom:14px">
+                <div>
+                  <label class="label-hint" style="display:block;margin-bottom:6px">Unit</label>
+                  <select id="f-break-unit">
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-hint" style="display:block;margin-bottom:6px">How many</label>
+                  <select id="f-break-count"></select>
+                </div>
+              </div>
+              <label style="margin-bottom:8px">On medication (each period before a break)</label>
+              <div class="form-grid" style="grid-template-columns:1fr 1fr">
+                <div>
+                  <label class="label-hint" style="display:block;margin-bottom:6px">Unit</label>
+                  <select id="f-on-unit">
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-hint" style="display:block;margin-bottom:6px">How many</label>
+                  <select id="f-on-count"></select>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="full">
           <label>Notes <span class="label-hint">(optional)</span></label>
@@ -438,28 +496,14 @@ function save() {
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────
-window.switchLoginTab = (mode) => {
-  document.getElementById('tab-signin').classList.toggle('active', mode === 'signin');
-  document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
-  const info = document.getElementById('login-info-text');
-  const btn  = document.getElementById('google-btn-text');
-  if (mode === 'signup') {
-    info.textContent = 'Create your MedTrack account with Google. Your data syncs across all your devices.';
-    btn.textContent  = 'Sign up with Google';
-  } else {
-    info.textContent = 'Sign in with your Google account to access your medication schedule.';
-    btn.textContent  = 'Continue with Google';
-  }
-};
-
 window.triggerGoogleLogin = () => {
   const btn = document.getElementById('google-login-btn');
   btn.disabled = true;
-  btn.querySelector('span').textContent = 'Opening Google…';
+  document.getElementById('google-btn-text').textContent = 'Opening Google…';
 
   if (typeof google === 'undefined' || !google.accounts) {
     btn.disabled = false;
-    btn.querySelector('span').textContent = 'Continue with Google';
+    document.getElementById('google-btn-text').textContent = 'Continue with Google';
     alert('Google sign-in is not available. Please ensure you are online and try again.');
     return;
   }
@@ -568,7 +612,24 @@ function dosesPerWeek(m) {
   return daysPerWeek * todsPerDay;
 }
 
+function periodToMs(unit, count) {
+  if (!count || count <= 0) return 0;
+  const dayMs = 86400000;
+  if (unit === 'months') return count * 30 * dayMs;
+  return count * 7 * dayMs;
+}
+
 function calcEndDate(m) {
+  const course = m.courseType || 'doses';
+  if (course === 'ongoing') return null;
+  if (course === 'duration' && m.durationCount > 0 && m.durationUnit) {
+    const start = new Date(parseInt(m.id));
+    const end   = new Date(start);
+    if (m.durationUnit === 'months') end.setMonth(end.getMonth() + m.durationCount);
+    else end.setDate(end.getDate() + m.durationCount * 7);
+    end.setDate(end.getDate() - 1);
+    return end;
+  }
   if (!m.doses || m.doses <= 0) return null;
   const dpw = dosesPerWeek(m);
   if (dpw <= 0) return null;
@@ -610,6 +671,20 @@ function isTodayMed(m) {
   if (end) {
     const endMidnight = new Date(end); endMidnight.setHours(23,59,59,999);
     if (endMidnight < today) return false;
+  }
+  const course = m.courseType || 'doses';
+  if (course === 'ongoing' && m.ongoingBreaks && m.onCount > 0 && m.breakCount > 0) {
+    const start = new Date(parseInt(m.id));
+    const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const s0 = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+    const onMs  = periodToMs(m.onUnit || 'weeks', m.onCount);
+    const offMs = periodToMs(m.breakUnit || 'weeks', m.breakCount);
+    const cycle = onMs + offMs;
+    if (cycle > 0) {
+      const elapsed = t0 - s0;
+      if (elapsed < 0) return false;
+      if (elapsed % cycle >= onMs) return false;
+    }
   }
   if (m.days === 'alternate') {
     const start = new Date(parseInt(m.id));
@@ -696,23 +771,114 @@ window.selectAlternate = el => {
   el.classList.toggle('selected');
 };
 
+window.selectCourseType = (el) => {
+  document.querySelectorAll('#course-type-chips .sel-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const t = el.dataset.course;
+  document.getElementById('wrap-course-doses').classList.toggle('hidden', t !== 'doses');
+  document.getElementById('wrap-course-duration').classList.toggle('hidden', t !== 'duration');
+  document.getElementById('wrap-course-ongoing').classList.toggle('hidden', t !== 'ongoing');
+};
+
+window.selectBreakYn = (el) => {
+  document.querySelectorAll('#break-yn-chips .sel-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('wrap-break-cycle').classList.toggle('hidden', el.dataset.breakyn !== 'yes');
+};
+
+function fillCountSelect(id, max) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  sel.innerHTML = '';
+  for (let i = 1; i <= max; i++) {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = String(i);
+    sel.appendChild(o);
+  }
+}
+fillCountSelect('f-duration-count', 60);
+fillCountSelect('f-on-count', 60);
+fillCountSelect('f-break-count', 60);
+
+function resetCourseForm() {
+  document.querySelectorAll('#course-type-chips .sel-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelector('#course-type-chips .sel-chip[data-course="doses"]').classList.add('selected');
+  document.getElementById('wrap-course-doses').classList.remove('hidden');
+  document.getElementById('wrap-course-duration').classList.add('hidden');
+  document.getElementById('wrap-course-ongoing').classList.add('hidden');
+  document.querySelectorAll('#break-yn-chips .sel-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelector('#break-yn-chips .sel-chip[data-breakyn="no"]').classList.add('selected');
+  document.getElementById('wrap-break-cycle').classList.add('hidden');
+  document.getElementById('f-duration-unit').value = 'weeks';
+  document.getElementById('f-on-unit').value = 'weeks';
+  document.getElementById('f-break-unit').value = 'weeks';
+}
+
 window.addMedication = async () => {
   const name  = document.getElementById('f-name').value.trim();
   const notes = document.getElementById('f-notes').value.trim();
-  const doses = parseInt(document.getElementById('f-doses').value) || null;
   const tods  = [...document.querySelectorAll('#tod-chips .sel-chip.selected')].map(c => c.dataset.tod);
   const meal  = document.querySelector('#meal-chips .sel-chip.selected')?.dataset.meal || 'After food';
   const isAlt = document.getElementById('chip-alternate').classList.contains('selected');
   const days  = [...document.querySelectorAll('#days-chips .day-chip[data-day].selected')].map(c => c.dataset.day);
+  const courseType = document.querySelector('#course-type-chips .sel-chip.selected')?.dataset.course || 'doses';
 
   if (!name)        { alert('Please enter a medication name.'); return; }
   if (!tods.length) { alert('Please select at least one time of day.'); return; }
   if (!isAlt && !days.length) { alert('Please select at least one day or choose "Every other day".'); return; }
 
+  let doses = null;
+  let durationUnit = null;
+  let durationCount = null;
+  let ongoingBreaks = false;
+  let onUnit = null;
+  let onCount = null;
+  let breakUnit = null;
+  let breakCount = null;
+
+  if (courseType === 'doses') {
+    const raw = document.getElementById('f-doses').value.trim();
+    doses = raw ? (parseInt(raw, 10) || null) : null;
+  } else if (courseType === 'duration') {
+    durationUnit  = document.getElementById('f-duration-unit').value;
+    durationCount = parseInt(document.getElementById('f-duration-count').value, 10) || null;
+    if (!durationCount) { alert('Please choose how many weeks or months this course lasts.'); return; }
+  } else if (courseType === 'ongoing') {
+    ongoingBreaks = document.querySelector('#break-yn-chips .sel-chip.selected')?.dataset.breakyn === 'yes';
+    if (ongoingBreaks) {
+      onUnit    = document.getElementById('f-on-unit').value;
+      onCount   = parseInt(document.getElementById('f-on-count').value, 10) || 0;
+      breakUnit = document.getElementById('f-break-unit').value;
+      breakCount = parseInt(document.getElementById('f-break-count').value, 10) || 0;
+      if (onCount < 1 || breakCount < 1) {
+        alert('Please choose how many weeks or months for each break and for each treatment period (both dropdowns).');
+        return;
+      }
+    }
+  }
+
   const btn = document.getElementById('add-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
-  medications.push({ id: Date.now().toString(), name, tod: tods, meal, notes, doses, days: isAlt ? 'alternate' : days });
+  const row = {
+    id: Date.now().toString(),
+    name,
+    tod: tods,
+    meal,
+    notes,
+    days: isAlt ? 'alternate' : days,
+    courseType,
+    doses,
+    durationUnit,
+    durationCount,
+    ongoingBreaks,
+    onUnit,
+    onCount,
+    breakUnit,
+    breakCount
+  };
+  medications.push(row);
   await saveToFirestore();
 
   // Reset form
@@ -722,6 +888,7 @@ window.addMedication = async () => {
   document.querySelectorAll('#days-chips .day-chip, #tod-chips .sel-chip').forEach(c => c.classList.remove('selected'));
   document.querySelectorAll('#meal-chips .sel-chip').forEach(c => c.classList.remove('selected'));
   document.querySelector('#meal-chips .sel-chip[data-meal="After food"]').classList.add('selected');
+  resetCourseForm();
 
   btn.disabled = false; btn.textContent = 'Add Medication';
   renderSchedule();
@@ -751,14 +918,23 @@ function renderSchedule() {
     const startDate = new Date(parseInt(m.id));
     const endDate   = calcEndDate(m);
     const dLeft     = daysUntil(endDate);
+    const course    = m.courseType || 'doses';
+    let courseNote  = '';
+    if (course === 'duration' && m.durationCount)
+      courseNote = ` · ${m.durationCount} ${m.durationUnit === 'months' ? 'mo' : 'wk'}`;
+    else if (course === 'ongoing')
+      courseNote = m.ongoingBreaks && m.onCount && m.breakCount
+        ? ` · Ongoing (${m.onCount} ${m.onUnit === 'months' ? 'mo' : 'wk'} on / ${m.breakCount} ${m.breakUnit === 'months' ? 'mo' : 'wk'} off)`
+        : ' · Ongoing';
     let badge = '';
     if (endDate) {
       if (dLeft < 0)      badge = `<span class="badge-expired">Expired</span>`;
       else if (dLeft <= 7) badge = `<span class="badge-ending">${dLeft}d left</span>`;
     }
+    const dosePart = course === 'doses' && m.doses ? ` · ${m.doses} doses` : '';
     const dateInfo = endDate
-      ? `${fmtDate(startDate)} → ${fmtDate(endDate)}${m.doses ? ` · ${m.doses} doses` : ''}`
-      : `Started ${fmtDate(startDate)}${m.doses ? ` · ${m.doses} doses` : ''}`;
+      ? `${fmtDate(startDate)} → ${fmtDate(endDate)}${dosePart}${courseNote}`
+      : `Started ${fmtDate(startDate)}${m.doses ? ` · ${m.doses} doses` : ''}${courseNote}`;
     const dayChips = (m.days === 'alternate' ? ['Every other day'] : m.days.length === 7 ? ['Every day'] : m.days)
       .map(d => `<span class="mini-chip">${d}</span>`).join('');
 
