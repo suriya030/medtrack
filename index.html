@@ -304,7 +304,7 @@ textarea { resize: vertical; min-height: 72px; }
           <div class="chip-row" id="course-type-chips" style="margin-bottom:12px">
             <div class="sel-chip selected" data-course="doses" onclick="selectCourseType(this)">By total doses</div>
             <div class="sel-chip" data-course="duration" onclick="selectCourseType(this)">By weeks or months</div>
-            <div class="sel-chip" data-course="ongoing" onclick="selectCourseType(this)">Ongoing</div>
+            <div class="sel-chip" data-course="ongoing" onclick="selectCourseType(this)">No end date</div>
           </div>
           <div id="wrap-course-doses">
             <label>Number of Doses <span class="label-hint">(total supply count)</span></label>
@@ -327,14 +327,13 @@ textarea { resize: vertical; min-height: 72px; }
             </div>
           </div>
           <div id="wrap-course-ongoing" class="hidden form-subsection">
-            <label>Do you need breaks between treatment periods? <span class="label-hint">(e.g. finasteride: months on, then months off, repeating)</span></label>
+            <label>Do you need breaks between treatment periods?</label>
             <div class="chip-row" id="break-yn-chips" style="margin-top:8px">
               <div class="sel-chip selected" data-breakyn="no" onclick="selectBreakYn(this)">No</div>
               <div class="sel-chip" data-breakyn="yes" onclick="selectBreakYn(this)">Yes</div>
             </div>
             <div id="wrap-break-cycle" class="hidden form-subsection">
-              <p style="font-size:12px;color:var(--text-muted);font-weight:300;margin-bottom:12px;line-height:1.5">Each cycle is: you take the drug for the first interval (calendar weeks or months), then you pause for the break interval, then it repeats. Example: 4 months on, 2 months off.</p>
-              <label style="margin-bottom:8px">On medication (each cycle)</label>
+              <label style="margin-bottom:8px">On medication</label>
               <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-bottom:14px">
                 <div>
                   <label class="label-hint" style="display:block;margin-bottom:6px">Unit</label>
@@ -348,7 +347,7 @@ textarea { resize: vertical; min-height: 72px; }
                   <select id="f-on-count"></select>
                 </div>
               </div>
-              <label style="margin-bottom:8px">Break (off medication, each cycle)</label>
+              <label style="margin-bottom:8px">Break (off medication)</label>
               <div class="form-grid" style="grid-template-columns:1fr 1fr">
                 <div>
                   <label class="label-hint" style="display:block;margin-bottom:6px">Unit</label>
@@ -626,7 +625,7 @@ function addCalendarPeriod(from, unit, count) {
 }
 
 /**
- * For ongoing meds with on/off cycles, true if `refDate` falls in an "on" segment.
+ * For no-end-date meds with on/off periods, true if `refDate` falls in an "on" segment.
  * Cycles use real calendar months (setMonth) or 7-day weeks from the medication start date.
  */
 function isOngoingOnTreatmentPhase(m, refDate) {
@@ -948,8 +947,8 @@ function renderSchedule() {
       courseNote = ` · ${m.durationCount} ${m.durationUnit === 'months' ? 'mo' : 'wk'}`;
     else if (course === 'ongoing')
       courseNote = m.ongoingBreaks && m.onCount && m.breakCount
-        ? ` · Ongoing: ${m.onCount} ${m.onUnit === 'months' ? 'month' : 'week'}${m.onCount === 1 ? '' : 's'} on, ${m.breakCount} ${m.breakUnit === 'months' ? 'month' : 'week'}${m.breakCount === 1 ? '' : 's'} off (repeating)`
-        : ' · Ongoing';
+        ? ` · No end date: ${m.onCount} ${m.onUnit === 'months' ? 'month' : 'week'}${m.onCount === 1 ? '' : 's'} on, ${m.breakCount} ${m.breakUnit === 'months' ? 'month' : 'week'}${m.breakCount === 1 ? '' : 's'} off`
+        : ' · No end date';
     let badge = '';
     if (endDate) {
       if (dLeft < 0)      badge = `<span class="badge-expired">Expired</span>`;
