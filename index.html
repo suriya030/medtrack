@@ -327,29 +327,15 @@ textarea { resize: vertical; min-height: 72px; }
             </div>
           </div>
           <div id="wrap-course-ongoing" class="hidden form-subsection">
-            <label>Do you need breaks between treatment periods? <span class="label-hint">(uncommon — e.g. some steroids or chemo cycles)</span></label>
+            <label>Do you need breaks between treatment periods? <span class="label-hint">(e.g. finasteride: months on, then months off, repeating)</span></label>
             <div class="chip-row" id="break-yn-chips" style="margin-top:8px">
               <div class="sel-chip selected" data-breakyn="no" onclick="selectBreakYn(this)">No</div>
               <div class="sel-chip" data-breakyn="yes" onclick="selectBreakYn(this)">Yes</div>
             </div>
             <div id="wrap-break-cycle" class="hidden form-subsection">
-              <p style="font-size:12px;color:var(--text-muted);font-weight:300;margin-bottom:12px;line-height:1.5">Choose how long each break lasts, then roughly how long you take the medication before each break (both are needed to hide doses during time off).</p>
-              <label style="margin-bottom:8px">Break (off medication)</label>
+              <p style="font-size:12px;color:var(--text-muted);font-weight:300;margin-bottom:12px;line-height:1.5">Each cycle is: you take the drug for the first interval (calendar weeks or months), then you pause for the break interval, then it repeats. Example: 4 months on, 2 months off.</p>
+              <label style="margin-bottom:8px">On medication (each cycle)</label>
               <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-bottom:14px">
-                <div>
-                  <label class="label-hint" style="display:block;margin-bottom:6px">Unit</label>
-                  <select id="f-break-unit">
-                    <option value="weeks">Weeks</option>
-                    <option value="months">Months</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="label-hint" style="display:block;margin-bottom:6px">How many</label>
-                  <select id="f-break-count"></select>
-                </div>
-              </div>
-              <label style="margin-bottom:8px">On medication (each period before a break)</label>
-              <div class="form-grid" style="grid-template-columns:1fr 1fr">
                 <div>
                   <label class="label-hint" style="display:block;margin-bottom:6px">Unit</label>
                   <select id="f-on-unit">
@@ -360,6 +346,20 @@ textarea { resize: vertical; min-height: 72px; }
                 <div>
                   <label class="label-hint" style="display:block;margin-bottom:6px">How many</label>
                   <select id="f-on-count"></select>
+                </div>
+              </div>
+              <label style="margin-bottom:8px">Break (off medication, each cycle)</label>
+              <div class="form-grid" style="grid-template-columns:1fr 1fr">
+                <div>
+                  <label class="label-hint" style="display:block;margin-bottom:6px">Unit</label>
+                  <select id="f-break-unit">
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-hint" style="display:block;margin-bottom:6px">How many</label>
+                  <select id="f-break-count"></select>
                 </div>
               </div>
             </div>
@@ -424,7 +424,6 @@ let unsubscribe   = null;  // Firestore listener
 
 const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const today      = new Date();
-const todayDay   = DAY_NAMES[today.getDay()];
 const todayStr   = today.toDateString();
 const hr         = today.getHours();
 const greeting   = hr < 12 ? 'Good morning.' : hr < 17 ? 'Good afternoon.' : 'Good evening.';
@@ -612,11 +611,43 @@ function dosesPerWeek(m) {
   return daysPerWeek * todsPerDay;
 }
 
-function periodToMs(unit, count) {
-  if (!count || count <= 0) return 0;
-  const dayMs = 86400000;
-  if (unit === 'months') return count * 30 * dayMs;
-  return count * 7 * dayMs;
+/** Local calendar date at midnight (no time-of-day drift). */
+function stripToCalendarDate(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/** Advance a calendar date by N months or N weeks (7-day blocks). */
+function addCalendarPeriod(from, unit, count) {
+  const out = new Date(from);
+  if (!count || count <= 0) return out;
+  if (unit === 'months') out.setMonth(out.getMonth() + count);
+  else out.setDate(out.getDate() + count * 7);
+  return out;
+}
+
+/**
+ * For ongoing meds with on/off cycles, true if `refDate` falls in an "on" segment.
+ * Cycles use real calendar months (setMonth) or 7-day weeks from the medication start date.
+ */
+function isOngoingOnTreatmentPhase(m, refDate) {
+  const onU  = m.onUnit || 'weeks';
+  const onC  = m.onCount;
+  const offU = m.breakUnit || 'weeks';
+  const offC = m.breakCount;
+  if (!onC || !offC) return true;
+  const t = stripToCalendarDate(refDate).getTime();
+  let cur = stripToCalendarDate(new Date(parseInt(m.id, 10)));
+  if (t < cur.getTime()) return false;
+  for (let i = 0; i < 5000; i++) {
+    const onEnd  = addCalendarPeriod(cur, onU, onC);
+    const onEndT = stripToCalendarDate(onEnd).getTime();
+    if (t < onEndT) return true;
+    const offEnd  = addCalendarPeriod(onEnd, offU, offC);
+    const offEndT = stripToCalendarDate(offEnd).getTime();
+    if (t < offEndT) return false;
+    cur = stripToCalendarDate(offEnd);
+  }
+  return true;
 }
 
 function calcEndDate(m) {
@@ -647,7 +678,8 @@ function fmtDate(d) {
 
 function daysUntil(d) {
   if (!d) return null;
-  return Math.ceil((d - today) / 86400000);
+  const now = new Date();
+  return Math.ceil((d - now) / 86400000);
 }
 
 // ── Navigation ─────────────────────────────────────────────────────────────
@@ -667,30 +699,22 @@ window.showPage = (id, btn) => {
 
 // ── TODAY ──────────────────────────────────────────────────────────────────
 function isTodayMed(m) {
+  const now = new Date();
+  const todayDayName = DAY_NAMES[now.getDay()];
   const end = calcEndDate(m);
   if (end) {
     const endMidnight = new Date(end); endMidnight.setHours(23,59,59,999);
-    if (endMidnight < today) return false;
+    if (endMidnight < now) return false;
   }
   const course = m.courseType || 'doses';
   if (course === 'ongoing' && m.ongoingBreaks && m.onCount > 0 && m.breakCount > 0) {
-    const start = new Date(parseInt(m.id));
-    const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const s0 = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
-    const onMs  = periodToMs(m.onUnit || 'weeks', m.onCount);
-    const offMs = periodToMs(m.breakUnit || 'weeks', m.breakCount);
-    const cycle = onMs + offMs;
-    if (cycle > 0) {
-      const elapsed = t0 - s0;
-      if (elapsed < 0) return false;
-      if (elapsed % cycle >= onMs) return false;
-    }
+    if (!isOngoingOnTreatmentPhase(m, now)) return false;
   }
   if (m.days === 'alternate') {
-    const start = new Date(parseInt(m.id));
-    return Math.floor((today - start) / 86400000) % 2 === 0;
+    const start = new Date(parseInt(m.id, 10));
+    return Math.floor((now - start) / 86400000) % 2 === 0;
   }
-  return Array.isArray(m.days) && m.days.includes(todayDay);
+  return Array.isArray(m.days) && m.days.includes(todayDayName);
 }
 
 function renderToday() {
@@ -852,7 +876,7 @@ window.addMedication = async () => {
       breakUnit = document.getElementById('f-break-unit').value;
       breakCount = parseInt(document.getElementById('f-break-count').value, 10) || 0;
       if (onCount < 1 || breakCount < 1) {
-        alert('Please choose how many weeks or months for each break and for each treatment period (both dropdowns).');
+        alert('Please choose how many weeks or months for each on-period and each break (both dropdowns).');
         return;
       }
     }
@@ -924,7 +948,7 @@ function renderSchedule() {
       courseNote = ` · ${m.durationCount} ${m.durationUnit === 'months' ? 'mo' : 'wk'}`;
     else if (course === 'ongoing')
       courseNote = m.ongoingBreaks && m.onCount && m.breakCount
-        ? ` · Ongoing (${m.onCount} ${m.onUnit === 'months' ? 'mo' : 'wk'} on / ${m.breakCount} ${m.breakUnit === 'months' ? 'mo' : 'wk'} off)`
+        ? ` · Ongoing: ${m.onCount} ${m.onUnit === 'months' ? 'month' : 'week'}${m.onCount === 1 ? '' : 's'} on, ${m.breakCount} ${m.breakUnit === 'months' ? 'month' : 'week'}${m.breakCount === 1 ? '' : 's'} off (repeating)`
         : ' · Ongoing';
     let badge = '';
     if (endDate) {
